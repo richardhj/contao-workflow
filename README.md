@@ -108,7 +108,7 @@ We proceed as follows:
 1. Create a new key-value pair (`ssh-keygen -t rsa -b 4096`). Do not overwrite your default one, save in extra folder!
 2. Add the public key to the `authorized_keys` on the production server.
 3. Save the private key as protected variable `SSH_PRIVATE_KEY` in the GitLab CI / CD config of the project.
-4. Alter the [`.github-ci.yml`](.github-ci.yml), then add it to your project and push to GitLab.
+4. Alter the [`.gitlab-ci.yml`](.gitlab-ci.yml), then add it to your project and push to GitLab.
 
 Within the `build_app` I run [`phpcq`](https://phpcq.github.io/) tasks, e.g. author-validation, composer-validation and runningn php tests (if available). The necessary files are within this repostiory. Run `composer require --dev phpcq/all-tasks`!
 
