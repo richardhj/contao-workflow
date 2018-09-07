@@ -110,7 +110,7 @@ We proceed as follows:
 3. Save the private key as protected variable `SSH_PRIVATE_KEY` in the GitLab CI / CD config of the project.
 4. Alter the [`.github-ci.yml`](.github-ci.yml), then add it to your project and push to GitLab.
 
-Within the `build_app` I run [`phpcq`](https://phpcq.github.io/) tasks, e.g. author-validation, composer-validation and runningn php tests (if available). The necessary files are within this repostiory.
+Within the `build_app` I run [`phpcq`](https://phpcq.github.io/) tasks, e.g. author-validation, composer-validation and runningn php tests (if available). The necessary files are within this repostiory. Run `composer require --dev phpcq/all-tasks`!
 
 ### Git versionized database
 
