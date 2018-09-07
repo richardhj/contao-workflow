@@ -1,4 +1,10 @@
 # Replace EXAMPLE.org with your variables.
+# Further readings:
+# * https://docs.gitlab.com/ee/ci/ssh_keys/
+# * https://gitlab.com/gitlab-examples/ssh-private-key/blob/master/.gitlab-ci.yml
+# * https://stackoverflow.com/a/49552383
+# * https://docs.gitlab.com/ee/ci/yaml/README.html
+# * https://grimoire.ca/git/stop-using-git-pull-to-deploy
 
 image: ubuntu
 
@@ -8,6 +14,7 @@ cache:
 
 build_app:
   stage: build
+  # This docker image comes with composer and ant.
   image: jorge07/alpine-php:7.1-dev
   before_script:
   # private repositories in your composer.json? use https instead of ssh
@@ -21,7 +28,7 @@ deploy_production:
     name: Production
     url: https://www.EXAMPLE.org
   only:
-  # Tagging a commit is the condition for deploying
+  # Tagging a commit is the condition for deploying. You could use when:manual instead (check out docs)
     - tags
   before_script:
     - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
