@@ -68,18 +68,21 @@ git remote add origin https://github.com/USER/example.org.git
 git push origin master
 ```
 
-It is a good way to develop on the master branch and to create an additional
-branch called `prod`. The `prod` branch should be protected (only fast-forward
-commits), the `master` branch does not have to.
+When you're ready to deploy on the production or staging, continue:
 
-When you're ready to deploy on the production server, run the following command
-on the live system:
+### Clone project on production
+
+1. Make sure, you have a SSH Key on your production server: `ls -al ~/.ssh`. If true, skip the next step.
+2. Create SSH-Key on server: `ssh-keygen -t rsa -b 4096`
+3. Show public SSH-Key `cat ~/.ssh/id_rsa.pub`, copy to clipboard.
+4. Add public SSH-Key as Deploy Key to GitLab Repository settings.
+5. Finally clone the project repository and install composer dependencies.
+
 ```bash
 git clone https://github.com/USER/example.org.git
 cd example.org
-composer install --no-dev -o
+composer install --no-dev -o --prefer-dist
 ```
-
 The path `example.org/web` then should become your website root.
 
 Now you import your database on the live system and you're ready to go live.
@@ -89,14 +92,29 @@ project. (Hint: you need to push the files from the dev repo beforehand)
 
 ```bash
 git pull origin
-composer install --no-dev -o
+composer install --no-dev -o --prefer-dist
 ```
 
 That's it!
 
-### Project files: easy. Now: Database
+### GitLab CI
 
-I check in the project's database in version control.
+With GitLab CI it is possible to test your application on every commit and automatically deploy the project on staging or production.
+
+Basically, I don't need to login on the server and git pull anymore. It saves some time ¯\_(ツ)_/¯
+
+We proceed as follows:
+
+1. Create a new key-value pair (`ssh-keygen -t rsa -b 4096`). Do not overwrite your default one, save in extra folder!
+2. Add the public key to the `authorized_keys` on the production server.
+3. Save the private key as protected variable `SSH_PRIVATE_KEY` in the GitLab CI / CD config of the project.
+4. Alter the [`.github-ci.yml`](.github-ci.yml), then add it to your project and push to GitLab.
+
+Within the `build_app` I run [`phpcq`](https://phpcq.github.io/) tasks, e.g. author-validation, composer-validation and runningn php tests (if available). The necessary files are within this repostiory.
+
+### Git versionized database
+
+It is possible to check in the project's database in version control.
 
 Major benefits: Easy rollback of database plus regular backup due of an entry
 in the crontab.
@@ -106,8 +124,7 @@ dev system:
 
 * `.git/hooks/pre-commit` (Creates the database dump with each commit)
 * `.git/hooks/post-merge` (Imports the database given in the repository. Data
-loss predictable if a lot of user-created content. I don't use this on
-production but on dev sometimes.)
+loss predictable.)
 
 You can find the hook files in the repository.
 
