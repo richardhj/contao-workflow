@@ -6,11 +6,6 @@
 # * https://docs.gitlab.com/ee/ci/yaml/README.html
 # * https://grimoire.ca/git/stop-using-git-pull-to-deploy
 
-image: ubuntu
-
-cache:
-  paths:
-    - vendor/
 
 build_app:
   stage: build
@@ -21,9 +16,14 @@ build_app:
   # - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/user/my-private-repo.git".insteadOf git@gitlab.com:user/my-private-repo.git
     - composer install -n --prefer-dist --no-progress --ignore-platform-reqs
   script: ant -keep-going
+  cache:
+    paths:
+      - vendor/
 
 deploy_production:
   stage: deploy
+  # This docker image comes with ssh-client and bash
+  image: kroniak/ssh-client
   environment:
     name: Production
     url: https://www.EXAMPLE.org
@@ -31,14 +31,11 @@ deploy_production:
   # Tagging a commit is the condition for deploying. You could use when:manual instead (check out docs)
     - tags
   before_script:
-    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - ssh-keyscan EXAMPLE.org >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-    - git config --global user.email "gitlab-ci@EXAMPLE.org"
-    - git config --global user.name "GitLab CI"
   script:
     - ssh user@EXAMPLE.org "cd /home/www/example.org && git fetch && git checkout $CI_COMMIT_SHA && /usr/bin/php7.2 composer.phar install -o -n --no-dev --no-progress --prefer-dist && php vendor/bin/contao-console contao:version"
