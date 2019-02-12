@@ -38,4 +38,4 @@ deploy_production:
     - ssh-keyscan EXAMPLE.org >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
   script:
-    - ssh user@EXAMPLE.org "cd /home/www/example.org && git fetch && git checkout $CI_COMMIT_SHA && /usr/bin/php7.2 composer.phar install -o -n --no-dev --no-progress --prefer-dist && php vendor/bin/contao-console contao:version"
+    - ssh user@EXAMPLE.org "cd /home/www/example.org && php vendor/bin/contao-console lexik:maintenance:lock --no-interaction --env=prod && git fetch && git checkout $CI_COMMIT_SHA && /usr/bin/php7.2 composer.phar install -o -n --no-dev --no-progress --prefer-dist && php vendor/bin/contao-console contao:database:update && php vendor/bin/contao-console lexik:maintenance:unlock --no-interaction --env=prod && php vendor/bin/contao-console contao:version"
