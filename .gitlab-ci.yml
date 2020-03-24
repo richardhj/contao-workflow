@@ -1,41 +1,26 @@
-# Replace EXAMPLE.org with your variables.
-# Further readings:
-# * https://docs.gitlab.com/ee/ci/ssh_keys/
-# * https://gitlab.com/gitlab-examples/ssh-private-key/blob/master/.gitlab-ci.yml
-# * https://stackoverflow.com/a/49552383
-# * https://docs.gitlab.com/ee/ci/yaml/README.html
-# * https://grimoire.ca/git/stop-using-git-pull-to-deploy
+include:
+  - remote: 'https://gitlab.com/richardhj/deployment/raw/v1/.gitlab-ci.include.yml'
+
+variables:
+  SSH_USER: user
+  SSH_HOST: test.uberspace.de
+  SSH_DOCUMENT_ROOT: /var/www/virtual/user/contao-example.org/current
+  URL: https://www.example.org
 
 
-build_app:
-  stage: build
-  # This docker image comes with composer and ant.
-  image: jorge07/alpine-php:7.1-dev
-  before_script:
-  # private repositories in your composer.json? use https instead of ssh
-  # - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/user/my-private-repo.git".insteadOf git@gitlab.com:user/my-private-repo.git
-    - composer install -n --prefer-dist --no-progress --ignore-platform-reqs
-  script: ant -keep-going
-  cache:
-    paths:
-      - vendor/
+###########
 
-deploy_production:
-  stage: deploy
-  # This docker image comes with ssh-client and bash
-  image: kroniak/ssh-client
-  environment:
-    name: Production
-    url: https://www.EXAMPLE.org
+
+save_database_dump:
   only:
-  # Tagging a commit is the condition for deploying. You could use when:manual instead (check out docs)
-    - tags
-  before_script:
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan EXAMPLE.org >> ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
+    - schedules
+  stage: deploy
+  extends: .download_db_dump
+
+composer_update:
+  only:
+    - schedules
+  extends: .deployer
   script:
-    - ssh user@EXAMPLE.org "cd /home/www/example.org && php vendor/bin/contao-console lexik:maintenance:lock --no-interaction --env=prod && git fetch && git checkout $CI_COMMIT_SHA && /usr/bin/php7.2 composer.phar install -o -n --no-dev --no-progress --prefer-dist && php vendor/bin/contao-console contao:database:update && php vendor/bin/contao-console lexik:maintenance:unlock --no-interaction --env=prod && php vendor/bin/contao-console contao:version"
+    - composer update --prefer-dist --no-progress --no-suggest
+    - php deployer.phar deploy $DEPLOY_STAGE
